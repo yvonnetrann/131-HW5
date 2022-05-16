@@ -1,6 +1,8 @@
 ---
 title: "HW5"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 ```{r}
 library(readr)
@@ -11,6 +13,10 @@ library(ISLR)
 library(tidyverse)
 library(glmnet)
 tidymodels_prefer()
+r = getOption("repos")
+r["CRAN"] = "http://cran.us.r-project.org"
+options(repos = r)
+install.packages("weatherData")
 ```
 
 
