@@ -1,0 +1,70 @@
+---
+title: "HW5"
+output: html_document
+---
+```{r}
+library(readr)
+library(ggplot2)
+library(dplyr)
+library(tidymodels)
+library(ISLR)
+library(tidyverse)
+tidymodels_prefer()
+```
+
+
+# Question 1
+```{r setup, include=FALSE}
+install.packages("janitor")
+library(janitor)
+Pokemon <- read_csv("~/Downloads/homework-5/data/Pokemon.csv")
+View(Pokemon)
+
+Pokemon_clean <- clean_names(Pokemon)
+
+```
+
+The data's object and column names are all converted to snake case (words separated by underscores like_this). Clean_names() is useful because it handles every kind of messy column name that's present in the data set and makes it easier to call when piping with "%>%".
+
+# Question 2
+```{r}
+#bar chart
+Pokemon_clean %>%
+  ggplot(aes(x=type_1)) +
+  geom_bar()
+
+table(Pokemon_clean$type_1)
+
+#filter out by specific classes
+Pokemon <- Pokemon_clean %>%
+  filter(type_1 %in% c("Bug", "Fire", "Grass", "Normal", "Water", "Psychic"))
+
+#factor type_1 and legendary
+Pokemon$type_1 <- as.factor(Pokemon$type_1)
+Pokemon$legendary <- as.factor(Pokemon$legendary)
+
+sapply(Pokemon,class)
+View(Pokemon)
+
+```
+There are 18 classes. The flying class appears to have very few Pokemon in comparison to the rest (4), but the fairy, fighting, flying, ice, poison, and steel are all classes that have less than 30 pokemon in it.  
+
+
+# Question 3
+```{r}
+#initial split
+set.seed(458)
+Pokemon_split <- initial_split(Pokemon, strata = "type_1", prop = 0.7)
+Pokemon_train <- training(Pokemon_split)
+Pokemon_test <- testing(Pokemon_split)
+
+dim(Pokemon_train)
+dim(Pokemon_test)
+
+pokemon_folds <- vfold_cv(Pokemon_train, v = 5, strata = "type_1")
+pokemon_folds
+```
+Stratifying the folds can be useful in ensuring that each fold of the dataset has the same proportion of observations with a given label.
+
+# Question 4
+
