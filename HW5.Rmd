@@ -118,12 +118,20 @@ pokemon_final <- finalize_workflow(pokemon_workflow, best_penalty)
 
 pokemon_final_fit <- fit(pokemon_final, data = Pokemon_train)
 
-augment(pokemon_final_fit, new_data = Pokemon_test) %>%
-  roc_auc(truth = type_1, estimate = c(.pred_Bug, .pred_Fire, .pred_Grass, .pred_Normal, .pred_Water, .pred_Psychic))
+augment(pokemon_final_fit, new_data = Pokemon_test) 
 ```
 
 # Question 8
 ```{r}
+augment(pokemon_final_fit, new_data = Pokemon_test) %>%
+  roc_auc(truth = type_1, estimate = c(.pred_Bug, .pred_Fire, .pred_Grass, .pred_Normal, .pred_Water, .pred_Psychic))
 
+augment(pokemon_final_fit, new_data = Pokemon_test) %>%
+  roc_curve(truth = type_1, estimate = c(.pred_Bug, .pred_Fire, .pred_Grass, .pred_Normal, .pred_Water, .pred_Psychic)) %>%
+  autoplot()
+
+augment(pokemon_final_fit, new_data = Pokemon_test) %>%
+  conf_mat(truth = type_1, estimate = .pred_class) %>%
+  autoplot(type = "heatmap")
 ```
-
+In terms of performance, bug, fire, grass, and normal are all the types that the model is best at predicting. Comparing each curve to one another and trying to average out the performance, I believe the model performed relatively accurate, since the psychic and water predictions were not as good as the other types. This may be because the psychic and water types had more missing values, more specifically, missing type 2 values that gave us less data to work with. 
