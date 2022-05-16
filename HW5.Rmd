@@ -9,6 +9,7 @@ library(dplyr)
 library(tidymodels)
 library(ISLR)
 library(tidyverse)
+library(glmnet)
 tidymodels_prefer()
 ```
 
@@ -67,4 +68,62 @@ pokemon_folds
 Stratifying the folds can be useful in ensuring that each fold of the dataset has the same proportion of observations with a given label.
 
 # Question 4
+```{r}
+#set up a recipe
+pokemon_recipe <- recipe(type_1 ~ legendary + generation + sp_atk + attack + speed + defense + hp + sp_def, Pokemon_train) %>%
+  step_dummy(c(legendary, generation)) %>%
+  step_normalize(all_predictors())
+
+```
+# Question 5
+```{r}
+pokemon_reg <- multinom_reg(mixture = 0, penalty = 0) %>%
+  set_mode("classification") %>%
+  set_engine("glmnet")
+
+pokemon_grid <- grid_regular(penalty(range = c(-5, 5)), mixture(range = c(0,1)), levels = 10)
+pokemon_grid
+```
+10 (penalties) x 2 (mixtures) x 5 (folds) = 100 models that will be fitted when fitting to the folded data
+
+# Question 6
+```{r}
+pokemon_spec <- multinom_reg(penalty = tune(), mixture = tune()) %>%
+  set_mode("classification") %>%
+  set_engine("glmnet")
+
+pokemon_workflow <- workflow() %>% 
+  add_recipe(pokemon_recipe) %>% 
+  add_model(pokemon_spec)
+
+pokemon_res <- tune_grid(
+  pokemon_workflow,
+  resamples = pokemon_folds, 
+  grid = pokemon_grid
+)
+
+pokemon_res
+
+autoplot(pokemon_res)
+collect_metrics(pokemon_res)
+```
+From the plot, it appears that smaller values of penalty and mixture produce better accuracy and ROC AUC.
+
+# Question 7
+```{r}
+best_penalty <- select_best(pokemon_res, metric = "roc_auc")
+best_penalty
+
+pokemon_final <- finalize_workflow(pokemon_workflow, best_penalty)
+
+pokemon_final_fit <- fit(pokemon_final, data = Pokemon_train)
+
+augment(pokemon_final_fit, new_data = Pokemon_test) %>%
+  roc_auc(truth = type_1, estimate = c(.pred_Bug, .pred_Fire, .pred_Grass, .pred_Normal, .pred_Water, .pred_Psychic))
+```
+
+# Question 8
+```{r}
+
+```
 
